@@ -8,7 +8,7 @@
 
 /*
  実装したい機能
- (1)自動再生
+ Done:(1)自動再生
  (2)(1)をタップしたらページ遷移して自動再生
  (3)(2)に再生/停止を追加
  (4)(3)に再生経過時間を表示
@@ -115,6 +115,7 @@ class ViewController: UIViewController {
             self.seekBar.value = value
         })
         
+        /*
         // 動画の再生ボタンを生成
         let startButton = UIButton(frame: CGRect(x: 0, y: 0, width: 50, height: 50)) // ボタンオブジェクトを作っているだけなのでxとyの数値が何でも同じ
         startButton.layer.position = CGPoint(x: self.view.bounds.midX, y: self.view.bounds.midY - 50) // ボタンの位置を決めているが、boundsを使っているのでローカルビューに対するposition
@@ -123,13 +124,20 @@ class ViewController: UIViewController {
         startButton.backgroundColor = UIColor.orange
         startButton.setTitle("Start", for: UIControlState.normal) // normal:ボタン有効、highlighted:ボタン接触中、disabled:ボタン無効
         startButton.addTarget(self, action: #selector(onButtonClick(sender:)), for: UIControlEvents.touchUpInside)
-        self.view.addSubview(startButton)
+        self.view.addSubview(startButton)*/        
     }
     
+    /*
     // Startボタンがタップされた時に呼ばれるメソッド
     func onButtonClick(sender: UIButton) {
         // 再生時間を最初に戻して再生
         videoPlayer.seek(to: CMTimeMakeWithSeconds(0, Int32(NSEC_PER_SEC)))
+        videoPlayer.play()
+    }*/
+    
+    // 画面が表示される直前に動作するメソッド
+    override func viewDidAppear(_ animated: Bool) {
+        // この画面が読み込まれたら動画を自動再生
         videoPlayer.play()
     }
     
