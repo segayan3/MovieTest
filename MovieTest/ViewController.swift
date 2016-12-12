@@ -8,17 +8,51 @@
 
 /*
  実装したい機能
- Done:(1)自動再生
+ (1)自動再生
+   Done:-> アプリ立ち上げるとviewControllerで動画を自動再生
+   Done:-> viewControllerの動画はリピート再生
  (2)(1)をタップしたらページ遷移して自動再生
+   Done:-> viewControllerの動画をタップするとモーダルを開いて自動再生
+   Done:-> 遷移先から元に戻るとまた自動再生
  (3)(2)に再生/停止を追加
+   Done:-> 動画の再生/停止ボタンを実装
+   Done:-> シークバーを移動させるとそこから再生
+   Done:-> 再生中に動画をタップすると停止
+   Done:-> もう一度タップすると再生
+   Done:-> 終了後に動画をタップするとゼロから再生
+   Done:-> 終了後は自動的にシークをゼロに戻す
  (4)(3)に再生経過時間を表示
- (5)複数動画の読み込み
- (6)(5)を一番上の動画のみ自動再生（他はタップするまで停止）
- (7)(6)をタップしたらページ遷移して自動再生
- (8)(7)をスクロールビューに配置
- (9)Firebaseへの動画保存
- (10)(9)を読み込んで表示
- (11)(10)をクルクル回ってどんどん表示対応
+   Done:-> シークバーの下に再生時間と経過時間を表示
+ (5)viewControllerのレイアウトを作成
+   -> ロゴを配置
+   -> 検索窓を配置
+   -> 横スクロールのヘッダーナビを配置
+   -> フッターナビを配置
+ (6)複数動画の読み込み
+   -> CollectionViewLayoutを実装
+   -> 各セルに動画を配置
+   -> 一番上の動画のみ自動再生
+   -> 他はタップするまで停止状態でタップしたらモーダル表示
+ (7)detailViewControllerのレイアウトを作成
+   -> ヘッダータイトルを配置
+   -> モーダルを閉じるボタンを配置
+   -> 動画を配置
+   -> 再生/停止ボタンを配置
+   -> シークバーを配置
+   -> コンテンツタイトルと調理時間を配置
+   -> レシピを配置
+   -> 食べレポを配置
+   -> フッターナビを配置
+ (8)Firebaseからの読み込み
+   -> Firebaseにヘッダーナビのデータを保存
+   -> Firebaseからヘッダーナビのデータを取得
+   -> Firebaseに動画データを保存
+   -> Firebaseから動画データを取得
+   -> Firebaseにレシピデータを保存
+   -> Firebaseからレシピデータを取得
+ (9)(8)を動画多くてもクルクル回ってどんどん表示対応
+   -> データ数を50ぐらいに増やす
+   -> クルクル回って読み込む機能を実装
 */
 
 import UIKit
@@ -35,7 +69,6 @@ class AVPlayerView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame) // frameのサイズを変えると動画プレイヤーのビューのサイズが変わる
-        //super.init(frame: CGRect(x: 0, y: 0, width: 120, height: 180)) // -> テスト済み
     }
     
     override class var layerClass: AnyClass {
@@ -50,19 +83,34 @@ class ViewController: UIViewController {
     
     // ビデオプレイヤー
     var videoPlayer: AVPlayer! // 動画の再生プレイヤーを保存する変数
-    
-    // シークバー
-    var seekBar: UISlider! // 動画の再生バーを保存する変数
+
+    // ビデオプレイヤービューを貼り付けるためのバックグラウンドビュー
+    var videoBackGroundView: UIView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
+
+        // 動画プレイヤーをviewに配置
+        createMovieView()
+    }
+    
+    // 動画プレイヤーを配置するメソッド
+    private func createMovieView() {
         /*
          動画をビデオプレイヤーに表示しviewに貼り付ける処理
-        */
+         */
+        // 動画のファイル名と拡張子を変数に保存
+        let fileName = "IMG_9333"
+        let fileExtension = "MOV"
+        
+        // 他のプログラムから参照できるように動画ファイル名と拡張子をAppDelegateに保存
+        let appDelegate: AppDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.fileName = fileName
+        appDelegate.fileExtension = fileExtension
+
         // パスからassetを生成
-        let path = Bundle.main.path(forResource: "IMG_9333", ofType: "MOV")
+        let path = Bundle.main.path(forResource: fileName, ofType: fileExtension)
         let fileURL = URL(fileURLWithPath: path!)
         let avAsset = AVURLAsset(url: fileURL)
         
@@ -72,68 +120,26 @@ class ViewController: UIViewController {
         // 再生する動画を指定してビデオプレイヤーを生成
         videoPlayer = AVPlayer(playerItem: playerItem)
         
-        // ビデオプレイヤーを配置するためのUIViewを生成
+        // ビデオプレイヤーを配置するためのUIViewを生成 -> ここで動画プレイヤーのサイズを決める(撮影の段階から画角を決めるべきか?)
+        videoBackGroundView = UIView(frame: self.view.bounds)
+        self.view.addSubview(videoBackGroundView) // superViewにビデオプレイヤービューのためのバックグラウンドビューを貼り付け
         let videoPlayerView = AVPlayerView(frame: self.view.bounds) // frameのサイズを変えると動画プレイヤーのサイズが変わる
-        //let videoPlayerView = AVPlayerView(frame: CGRect(x: 0, y: 0, width: self.view.bounds.width / 2, height: self.view.bounds.height / 2)) // -> テスト済み
-        
+
+        // 動画の終了を監視してリピート再生するためのNotification設定
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handlePlayerItemDidReachEnd), name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: playerItem)
+
         // videoPlayerViewをAVPlayerLayerキャストし動画プレイヤーを配置する
         let layer = videoPlayerView.layer as! AVPlayerLayer
         layer.videoGravity = AVLayerVideoGravityResizeAspect // 縦横ともちょうどよく収まる
         layer.player = videoPlayer
         
-        // 動画プレイヤーを配置したビューをsuperViewに追加する
-        self.view.layer.addSublayer(layer) // layerパラメーターについて調査
+        // 動画プレイヤーを配置したビューをバックグラウンドビューに追加する
+        videoBackGroundView.layer.addSublayer(layer)
         
-        // 動画のシークバーとなるUISlderを生成
-        seekBar = UISlider(frame: CGRect(x: 0, y: 0, width: self.view.bounds.maxX - 100, height: 50)) // スライダーオブジェクトを作っているだけなので、xとyの値が何でも変化はない
-        seekBar.layer.position = CGPoint(x: self.view.bounds.midX, y: self.view.bounds.maxY - 100) // スライダーの配置場所を決定しているが、boundsを使っているのでローカルビューに対するposition
-        seekBar.minimumValue = 0 // シークバーの最小値
-        seekBar.maximumValue = Float(CMTimeGetSeconds(avAsset.duration)) // シークバーの最大値はビデオの再生時間
-        seekBar.addTarget(self, action: #selector(onSliderValueChange(sender:)), for: UIControlEvents.valueChanged)
-        self.view.addSubview(seekBar) // selfがなくても動く。理由はviewがsuperViewだからselfしてもしなくても同じなので。
-        //view.addSubview(seekBar) // -> テスト済み
-        
-        /*
-         シークバーを動画とシンクロさせる処理
-        */
-        // シークバーを0.5分割で動かすことができるようにインターバルを指定
-        let interval: Double = Double(0.5 * seekBar.maximumValue) / Double(seekBar.bounds.maxX)
-        
-        // インターバル（秒）を動画用インターバル（フレーム/秒）に変換するため、CMTimeに変換する
-        let time: CMTime = CMTimeMakeWithSeconds(interval, Int32(NSEC_PER_SEC)) // Int32(NSEC_PER_SEC)はタイムスケールと呼ばれ指定するとフレーム/秒にできる
-        
-        // time毎に呼び出されるクロージャー
-        videoPlayer.addPeriodicTimeObserver(forInterval: time, queue: nil, using: { time in
-            // 総再生時間を取得
-            let duration = CMTimeGetSeconds(self.videoPlayer.currentItem!.duration)
-            
-            // 現在の時間を取得
-            let time = CMTimeGetSeconds(self.videoPlayer.currentTime())
-            
-            // シークバーの位置を変更
-            let value = Float(self.seekBar.maximumValue - self.seekBar.minimumValue) * Float(time) / Float(duration) + Float(self.seekBar.minimumValue)
-            self.seekBar.value = value
-        })
-        
-        /*
-        // 動画の再生ボタンを生成
-        let startButton = UIButton(frame: CGRect(x: 0, y: 0, width: 50, height: 50)) // ボタンオブジェクトを作っているだけなのでxとyの数値が何でも同じ
-        startButton.layer.position = CGPoint(x: self.view.bounds.midX, y: self.view.bounds.midY - 50) // ボタンの位置を決めているが、boundsを使っているのでローカルビューに対するposition
-        startButton.layer.masksToBounds = true // 角丸に合わせてマスクする
-        startButton.layer.cornerRadius = 20.0
-        startButton.backgroundColor = UIColor.orange
-        startButton.setTitle("Start", for: UIControlState.normal) // normal:ボタン有効、highlighted:ボタン接触中、disabled:ボタン無効
-        startButton.addTarget(self, action: #selector(onButtonClick(sender:)), for: UIControlEvents.touchUpInside)
-        self.view.addSubview(startButton)*/        
+        // 動画をタップしたらモーダルを起動するようにviewにTapGestureRecognizerを設定
+        let movieTap = UITapGestureRecognizer(target: self, action: #selector(handleDetailViewShow(sender:)))
+        videoBackGroundView.addGestureRecognizer(movieTap)
     }
-    
-    /*
-    // Startボタンがタップされた時に呼ばれるメソッド
-    func onButtonClick(sender: UIButton) {
-        // 再生時間を最初に戻して再生
-        videoPlayer.seek(to: CMTimeMakeWithSeconds(0, Int32(NSEC_PER_SEC)))
-        videoPlayer.play()
-    }*/
     
     // 画面が表示される直前に動作するメソッド
     override func viewDidAppear(_ animated: Bool) {
@@ -141,12 +147,30 @@ class ViewController: UIViewController {
         videoPlayer.play()
     }
     
-    // シークバーの値が変わった時に呼ばれるメソッド
-    func onSliderValueChange(sender: UISlider) {
-        // 動画の再生時間をシークバーとシンクロさせる
-        videoPlayer.seek(to: CMTimeMakeWithSeconds(Float64(seekBar.value), Int32(NSEC_PER_SEC)))
+    // 動画をタップした時にモーダルを立ち上げるメソッド
+    func handleDetailViewShow(sender: UITapGestureRecognizer) {
+        print("検知した！")
+        videoPlayer.pause()
+        let detailViewController = self.storyboard?.instantiateViewController(withIdentifier: "detail")
+        self.present(detailViewController!, animated: true, completion: nil)
     }
-
+    
+    // 動画の終了を検知してリピート再生するメソッド
+    func handlePlayerItemDidReachEnd(notification: Notification) -> Void {
+        // 再生中の動画の総再生時間を取得
+        let duration = CMTimeGetSeconds(self.videoPlayer.currentItem!.duration)
+        
+        // 再生終了時間をCMTime型で取得
+        let endTime = CMTimeMake(Int64(0.5), Int32(duration))
+        
+        // 動画終了を検知したらまた再生
+        videoPlayer.seek(to: endTime, completionHandler: {_ in 
+            // 動画を再生
+            self.videoPlayer.play()
+        })
+        return
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
