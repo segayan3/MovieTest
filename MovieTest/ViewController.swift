@@ -24,10 +24,11 @@
  (4)(3)に再生経過時間を表示
    Done:-> シークバーの下に再生時間と経過時間を表示
  (5)viewControllerのレイアウトを作成
-   -> ロゴを配置
-   -> 検索窓を配置
+   Done:-> ロゴを配置
+   Done:-> 検索窓を配置
    -> 横スクロールのヘッダーナビを配置
-   -> フッターナビを配置
+   Done:-> フッターナビを配置
+   -> タブ切り替え時の各ページのデザインを作成
  (6)複数動画の読み込み
    -> CollectionViewLayoutを実装
    -> 各セルに動画を配置
@@ -43,6 +44,7 @@
    -> レシピを配置
    -> 食べレポを配置
    -> フッターナビを配置
+   -> 読み込みをもっと早くする工夫
  (8)Firebaseからの読み込み
    -> Firebaseにヘッダーナビのデータを保存
    -> Firebaseからヘッダーナビのデータを取得
@@ -56,126 +58,48 @@
 */
 
 import UIKit
-import AVFoundation
-import CoreMedia
-
-// MARK:- 動画プレイヤーを配置したビューをAVPlayerLayerにするためのラッパークラス
-// これをsuperViewにaddSubViewする
-// これがないと動画再生できない
-class AVPlayerView: UIView {
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)!
-    }
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame) // frameのサイズを変えると動画プレイヤーのビューのサイズが変わる
-    }
-    
-    override class var layerClass: AnyClass {
-        return AVPlayerLayer.self
-    }
-}
+import ESTabBarController
 
 class ViewController: UIViewController {
     
-    // 再生用のアイテム
-    var playerItem: AVPlayerItem! // 実際の動画内容を保存する変数
-    
-    // ビデオプレイヤー
-    var videoPlayer: AVPlayer! // 動画の再生プレイヤーを保存する変数
-
-    // ビデオプレイヤービューを貼り付けるためのバックグラウンドビュー
-    var videoBackGroundView: UIView!
-
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-
-        // 動画プレイヤーをviewに配置
-        createMovieView()
+                
+        // ESTabBarControllerでTabBarを作成
+        setUpTab()
     }
     
-    // 動画プレイヤーを配置するメソッド
-    private func createMovieView() {
-        /*
-         動画をビデオプレイヤーに表示しviewに貼り付ける処理
-         */
-        // 動画のファイル名と拡張子を変数に保存
-        let fileName = "IMG_9333"
-        let fileExtension = "MOV"
+    // ESTabBarControllerでTabBarを作成するメソッド
+    func setUpTab() {
+        // 画像ファイル名を指定してESTabBarControllerを作成する
+        let tabBarController: ESTabBarController! = ESTabBarController(tabIconNames: ["home", "home", "home", "home"])
         
-        // 他のプログラムから参照できるように動画ファイル名と拡張子をAppDelegateに保存
-        let appDelegate: AppDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.fileName = fileName
-        appDelegate.fileExtension = fileExtension
-
-        // パスからassetを生成
-        let path = Bundle.main.path(forResource: fileName, ofType: fileExtension)
-        let fileURL = URL(fileURLWithPath: path!)
-        let avAsset = AVURLAsset(url: fileURL)
+        // 背景色、選択時の色を設定する
+        tabBarController.selectedColor = UIColor(red: 1.0, green: 0.44, blue: 0.11, alpha: 1)
+        tabBarController.buttonsBackgroundColor = UIColor(red: 0.96, green: 0.91, blue: 0.87, alpha: 1)
         
-        //ビデオプレイヤーに再生させるアイテムを生成
-        playerItem = AVPlayerItem(asset: avAsset)
+        // 作成したESTabBarControllerをviewControllerに貼り付ける
+        addChildViewController(tabBarController)
+        self.view.addSubview(tabBarController.view)
+        tabBarController.view.frame = CGRect(x: 0, y: 20 + 50 + 40, width: self.view.bounds.width, height: self.view.bounds.height - (20 + 50 + 40))
+        tabBarController.didMove(toParentViewController: self)
         
-        // 再生する動画を指定してビデオプレイヤーを生成
-        videoPlayer = AVPlayer(playerItem: playerItem)
+        // タブをタップした時に表示するViewControllerを設定する
+        let recipeViewController = storyboard?.instantiateViewController(withIdentifier: "Recipe")
+        let searchViewController = storyboard?.instantiateViewController(withIdentifier: "Search")
+        let likeViewController = storyboard?.instantiateViewController(withIdentifier: "Like")
+        let myPageViewController = storyboard?.instantiateViewController(withIdentifier: "MyPage")
         
-        // ビデオプレイヤーを配置するためのUIViewを生成 -> ここで動画プレイヤーのサイズを決める(撮影の段階から画角を決めるべきか?)
-        videoBackGroundView = UIView(frame: self.view.bounds)
-        self.view.addSubview(videoBackGroundView) // superViewにビデオプレイヤービューのためのバックグラウンドビューを貼り付け
-        let videoPlayerView = AVPlayerView(frame: self.view.bounds) // frameのサイズを変えると動画プレイヤーのサイズが変わる
-
-        // 動画の終了を監視してリピート再生するためのNotification設定
-        NotificationCenter.default.addObserver(self, selector: #selector(self.handlePlayerItemDidReachEnd), name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: playerItem)
-
-        // videoPlayerViewをAVPlayerLayerキャストし動画プレイヤーを配置する
-        let layer = videoPlayerView.layer as! AVPlayerLayer
-        layer.videoGravity = AVLayerVideoGravityResizeAspect // 縦横ともちょうどよく収まる
-        layer.player = videoPlayer
-        
-        // 動画プレイヤーを配置したビューをバックグラウンドビューに追加する
-        videoBackGroundView.layer.addSublayer(layer)
-        
-        // 動画をタップしたらモーダルを起動するようにviewにTapGestureRecognizerを設定
-        let movieTap = UITapGestureRecognizer(target: self, action: #selector(handleDetailViewShow(sender:)))
-        videoBackGroundView.addGestureRecognizer(movieTap)
-    }
-    
-    // 画面が表示される直前に動作するメソッド
-    override func viewDidAppear(_ animated: Bool) {
-        // この画面が読み込まれたら動画を自動再生
-        videoPlayer.play()
-    }
-    
-    // 動画をタップした時にモーダルを立ち上げるメソッド
-    func handleDetailViewShow(sender: UITapGestureRecognizer) {
-        print("検知した！")
-        videoPlayer.pause()
-        let detailViewController = self.storyboard?.instantiateViewController(withIdentifier: "detail")
-        self.present(detailViewController!, animated: true, completion: nil)
-    }
-    
-    // 動画の終了を検知してリピート再生するメソッド
-    func handlePlayerItemDidReachEnd(notification: Notification) -> Void {
-        // 再生中の動画の総再生時間を取得
-        let duration = CMTimeGetSeconds(self.videoPlayer.currentItem!.duration)
-        
-        // 再生終了時間をCMTime型で取得
-        let endTime = CMTimeMake(Int64(0.5), Int32(duration))
-        
-        // 動画終了を検知したらまた再生
-        videoPlayer.seek(to: endTime, completionHandler: {_ in 
-            // 動画を再生
-            self.videoPlayer.play()
-        })
-        return
+        tabBarController.setView(recipeViewController, at: 0)
+        tabBarController.setView(searchViewController, at: 1)
+        tabBarController.setView(likeViewController, at: 2)
+        tabBarController.setView(myPageViewController, at: 3)
     }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-
 }
 

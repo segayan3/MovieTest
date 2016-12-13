@@ -20,11 +20,104 @@
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ih2-r0-vqB">
+                                <rect key="frame" x="0.0" y="20" width="50" height="50"/>
+                                <color key="backgroundColor" red="0.40000000600000002" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="5tf-3z-tma"/>
+                                    <constraint firstAttribute="width" constant="50" id="i2c-db-bcf"/>
+                                </constraints>
+                            </imageView>
+                            <searchBar contentMode="redraw" placeholder="レシピを検索" translatesAutoresizingMaskIntoConstraints="NO" id="6tQ-Md-iHo">
+                                <rect key="frame" x="50" y="23" width="325" height="44"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </searchBar>
+                        </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="ih2-r0-vqB" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="L6r-A1-vcd"/>
+                            <constraint firstItem="6tQ-Md-iHo" firstAttribute="centerY" secondItem="ih2-r0-vqB" secondAttribute="centerY" id="NYV-KK-mPt"/>
+                            <constraint firstAttribute="trailing" secondItem="6tQ-Md-iHo" secondAttribute="trailing" id="ZcY-iu-W1L"/>
+                            <constraint firstItem="ih2-r0-vqB" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="20" id="t6C-mr-UUh"/>
+                            <constraint firstItem="6tQ-Md-iHo" firstAttribute="leading" secondItem="ih2-r0-vqB" secondAttribute="trailing" id="y6g-Gy-CA0"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+        </scene>
+        <!--Recipe View Controller-->
+        <scene sceneID="yo3-NK-68E">
+            <objects>
+                <viewController storyboardIdentifier="Recipe" id="O0Q-rp-CwT" customClass="RecipeViewController" customModule="MovieTest" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Web-yj-fnP"/>
+                        <viewControllerLayoutGuide type="bottom" id="x8y-bk-yGa"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8Uh-VR-nnA">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="oZt-RU-VjE" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="777" y="699"/>
+        </scene>
+        <!--Search View Controller-->
+        <scene sceneID="tYr-8B-kSy">
+            <objects>
+                <viewController storyboardIdentifier="Search" id="gYa-wL-HXB" customClass="SearchViewController" customModule="MovieTest" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="eQD-Gg-jfi"/>
+                        <viewControllerLayoutGuide type="bottom" id="OzE-j5-bVA"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="ckH-zb-pGP">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="XnR-rS-RNO" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1386" y="684"/>
+        </scene>
+        <!--Like View Controller-->
+        <scene sceneID="hrl-9Z-onc">
+            <objects>
+                <viewController storyboardIdentifier="Like" id="hUX-ET-hIX" customClass="LikeViewController" customModule="MovieTest" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="NER-Zw-Khf"/>
+                        <viewControllerLayoutGuide type="bottom" id="X6g-tD-U3J"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="n4S-xj-R70">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PWv-tk-AtH" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2017" y="679"/>
+        </scene>
+        <!--My Page View Controller-->
+        <scene sceneID="ITP-fW-bV0">
+            <objects>
+                <viewController storyboardIdentifier="MyPage" id="Pjx-dj-0Cg" customClass="MyPageViewController" customModule="MovieTest" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="THf-si-Zlp"/>
+                        <viewControllerLayoutGuide type="bottom" id="fEe-iD-4kC"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="k2r-Xd-Jm1">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="1zP-mV-xvT" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2644" y="677"/>
         </scene>
         <!--Detail View Controller-->
         <scene sceneID="TG6-oe-cLh">
